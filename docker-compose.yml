@@ -1,0 +1,58 @@
+# Local full-stack environment: MongoDB + API + Web.
+#   docker compose up --build
+# Web → http://localhost:3000, API → http://localhost:4000, Mongo → 27017.
+# AI_PROVIDER defaults to mock so the stack runs without a Gemini key;
+# export GEMINI_API_KEY and set AI_PROVIDER=gemini for real AI.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/ai_interview_simulator
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-dev-access-secret-change-me-0000000000000000}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-local-dev-refresh-secret-change-me-000000000000000}
+      CORS_ORIGIN: http://localhost:3000
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      FREE_TIER_INTERVIEWS_PER_MONTH: 3
+    volumes:
+      - api-uploads:/repo/apps/api/uploads
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '3000:3000'
+    environment:
+      API_PROXY_TARGET: http://api:4000
+
+volumes:
+  mongo-data:
+  api-uploads:

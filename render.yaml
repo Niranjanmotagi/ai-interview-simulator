@@ -1,0 +1,34 @@
+# Render blueprint for the Express API.
+# The frontend deploys to Vercel (see README → Deployment).
+services:
+  - type: web
+    name: ai-interview-api
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm ci && npm run build:api
+    startCommand: node apps/api/dist/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: MONGODB_URI
+        sync: false # set in dashboard → MongoDB Atlas connection string
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false # your Vercel URL, e.g. https://ai-interview.vercel.app
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_FAST_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_SMART_MODEL
+        value: gemini-2.5-pro
+      - key: FREE_TIER_INTERVIEWS_PER_MONTH
+        value: 3

@@ -1,0 +1,30 @@
+{
+  "name": "ai-interview-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered interview preparation platform: resume analysis, personalized mock interviews, rubric-based evaluation, and improvement plans.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "build": "npm run build -w packages/types && npm run build -w apps/api && npm run build -w apps/web",
+    "build:api": "npm run build -w packages/types && npm run build -w apps/api",
+    "build:web": "npm run build -w packages/types && npm run build -w apps/web",
+    "typecheck": "npm run typecheck -w packages/types && npm run typecheck -w apps/api && npm run typecheck -w apps/web",
+    "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
+    "test": "npm run test -w apps/api",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "prettier": "^3.4.2"
+  }
+}

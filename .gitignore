@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Builds
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Uploads (local file storage for resume originals)
+apps/api/uploads/
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Vercel / deployment
+.vercel
+
+# Local artifacts
+.ui-ref/
+apps/api/uploads-test/
+.vercel

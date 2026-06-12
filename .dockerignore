@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/uploads
+**/uploads-test
+**/.env
+**/.env.local
+.git
+.github
+*.md

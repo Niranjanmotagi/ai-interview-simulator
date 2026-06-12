@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm off-white canvas, near-black ink, green brand accent. */
+    --background: 60 9% 98%;
+    --foreground: 240 6% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 7%;
+    --primary: 240 6% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 60 5% 94%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 60 5% 94%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 142 60% 92%;
+    --accent-foreground: 142 72% 22%;
+    --destructive: 4 74% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 86%;
+    --input: 240 6% 70%;
+    --ring: 142 71% 40%;
+    --radius: 1rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  ::selection {
+    background: #86efac;
+    color: #0a0a0a;
+  }
+}
+
+@layer utilities {
+  /* Subtle dot-grid backdrop used across marketing and app surfaces. */
+  .bg-dots {
+    background-image: radial-gradient(circle, rgb(24 24 27 / 0.10) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Sticker pills: bordered, slightly rotated, candy-colored. */
+  .sticker {
+    @apply inline-flex items-center gap-1.5 rounded-full border-2 border-zinc-900 px-3.5 py-1.5 text-sm font-bold text-zinc-900 shadow-hard-sm;
+  }
+
+  .text-gradient-pop {
+    @apply bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 bg-clip-text text-transparent;
+  }
+}
