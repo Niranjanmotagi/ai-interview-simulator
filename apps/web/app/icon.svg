@@ -1,0 +1,7 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI Interview Simulator">
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="#0b0b0c"/>
+  <!-- speech bubble = interview/conversation -->
+  <path d="M150 132h212a44 44 0 0 1 44 44v120a44 44 0 0 1-44 44H252l-78 60a12 12 0 0 1-19-10v-50h-5a44 44 0 0 1-44-44V176a44 44 0 0 1 44-44z" fill="#16a34a"/>
+  <!-- checkmark = feedback/pass -->
+  <path d="M196 240l40 40 84-92" fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
