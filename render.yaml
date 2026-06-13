@@ -6,7 +6,9 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build:api
+    # --include=dev: NODE_ENV=production would otherwise skip devDependencies,
+    # and the TypeScript compiler lives there.
+    buildCommand: npm ci --include=dev && npm run build:api
     startCommand: node apps/api/dist/server.js
     healthCheckPath: /health
     envVars:
