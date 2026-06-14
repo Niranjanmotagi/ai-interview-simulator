@@ -461,6 +461,9 @@ export const SOCKET_EVENTS = {
   SNAPSHOT_CREATED: 'snapshot:created',
   LANGUAGE_CHANGE: 'language:change',
   LANGUAGE_CHANGED: 'language:changed',
+  EXEC_RUN: 'exec:run',
+  EXEC_STARTED: 'exec:started',
+  EXEC_RESULT: 'exec:result',
   ERROR: 'room:error',
 } as const;
 
@@ -525,4 +528,44 @@ export interface ActivityInput {
 export interface SocketErrorEvent {
   code: string;
   message: string;
+}
+
+// ---------------------------------------------------------------------------
+// Secure code execution
+// ---------------------------------------------------------------------------
+
+export type ExecutionStatus =
+  | 'running'
+  | 'success'
+  | 'compile_error'
+  | 'runtime_error'
+  | 'timeout'
+  | 'error';
+
+export interface RunCodeInput {
+  language: RoomLanguage;
+  code: string;
+  stdin?: string;
+}
+
+export interface ExecutionDto {
+  id: string;
+  roomId: string;
+  requestedById: string;
+  requestedByName: string;
+  language: RoomLanguage;
+  status: ExecutionStatus;
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  timeMs: number | null;
+  memoryKb: number | null;
+  createdAt: string;
+}
+
+/** exec:started — broadcast the moment a run begins, so peers see "running…". */
+export interface ExecStartedEvent {
+  requestedById: string;
+  requestedByName: string;
+  language: RoomLanguage;
 }

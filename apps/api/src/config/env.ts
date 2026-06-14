@@ -33,6 +33,13 @@ const envSchema = z
     // Realtime collaboration (CodeSync rooms)
     REALTIME_PERSIST_DEBOUNCE_MS: z.coerce.number().int().positive().default(2000),
     REALTIME_AUTOSNAPSHOT_MS: z.coerce.number().int().positive().default(120_000),
+
+    // Secure code execution
+    EXECUTION_PROVIDER: z.enum(['mock', 'piston']).default('mock'),
+    PISTON_URL: z.string().default('https://emkc.org/api/v2/piston'),
+    EXEC_RUN_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
+    EXEC_MEMORY_LIMIT_MB: z.coerce.number().int().nonnegative().default(256),
+    EXEC_MAX_CODE_BYTES: z.coerce.number().int().positive().default(100_000),
   })
   .refine((e) => e.AI_PROVIDER !== 'gemini' || Boolean(e.GEMINI_API_KEY), {
     message: 'GEMINI_API_KEY is required when AI_PROVIDER=gemini',

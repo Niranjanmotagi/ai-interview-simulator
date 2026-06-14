@@ -7,11 +7,18 @@ import {
   type AwarenessEvent,
   type PresenceUser,
   type RoomLanguage,
+  type RunCodeInput,
 } from '@ai-interview/types';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
 import * as roomService from '../modules/rooms/room.service';
-import { toChatMessageDto, toParticipantDto, toRoomDto, toSnapshotListItemDto } from '../modules/rooms/room.mapper';
+import {
+  toChatMessageDto,
+  toExecutionDto,
+  toParticipantDto,
+  toRoomDto,
+  toSnapshotListItemDto,
+} from '../modules/rooms/room.mapper';
 import * as registry from './roomRegistry';
 
 interface SocketState {
@@ -65,6 +72,7 @@ function registerHandlers(io: Server, socket: AppSocket): void {
   socket.on(SOCKET_EVENTS.ACTIVITY, safe(socket, (payload) => handleActivity(io, socket, payload)));
   socket.on(SOCKET_EVENTS.SNAPSHOT_CREATE, safe(socket, (payload) => handleSnapshot(io, socket, payload)));
   socket.on(SOCKET_EVENTS.LANGUAGE_CHANGE, safe(socket, (payload) => handleLanguage(io, socket, payload)));
+  socket.on(SOCKET_EVENTS.EXEC_RUN, safe(socket, (payload) => handleRun(io, socket, payload)));
   socket.on('disconnect', () => {
     void handleDisconnect(io, socket);
   });
@@ -273,6 +281,26 @@ async function handleLanguage(
     type: 'language_change',
     meta: { language },
   });
+}
+
+async function handleRun(io: Server, socket: AppSocket, payload: RunCodeInput): Promise<void> {
+  const roomId = socket.data.roomId;
+  const member = socket.data.member;
+  if (!roomId || !member || !payload?.language) {
+    return;
+  }
+  // Tell the room a run is in flight so everyone sees "running…".
+  io.to(channel(roomId)).emit(SOCKET_EVENTS.EXEC_STARTED, {
+    requestedById: member.userId,
+    requestedByName: member.name,
+    language: payload.language,
+  });
+  const execution = await roomService.performRun(roomId, member.userId, member.name, {
+    language: payload.language,
+    code: payload.code ?? '',
+    stdin: payload.stdin,
+  });
+  io.to(channel(roomId)).emit(SOCKET_EVENTS.EXEC_RESULT, toExecutionDto(execution));
 }
 
 async function handleDisconnect(io: Server, socket: AppSocket): Promise<void> {

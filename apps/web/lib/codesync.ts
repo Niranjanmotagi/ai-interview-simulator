@@ -29,13 +29,72 @@ export const MONACO_LANGUAGE: Record<RoomLanguage, string> = {
   go: 'go',
 };
 
-/** Minimal starter scaffold the host seeds into an empty room. */
+/** Runnable starter scaffold the host seeds into an empty room (each has an
+ *  entry point that prints, so "Run" produces output immediately). */
 export const STARTER_TEMPLATES: Record<RoomLanguage, string> = {
-  javascript: `// Two Sum — return indices of the two numbers that add up to target.\nfunction twoSum(nums, target) {\n  // your solution here\n}\n`,
-  python: `# Two Sum — return indices of the two numbers that add up to target.\ndef two_sum(nums, target):\n    # your solution here\n    pass\n`,
-  java: `import java.util.*;\n\nclass Solution {\n    // Two Sum — return indices of the two numbers that add up to target.\n    int[] twoSum(int[] nums, int target) {\n        // your solution here\n        return new int[]{};\n    }\n}\n`,
-  cpp: `#include <vector>\nusing namespace std;\n\n// Two Sum — return indices of the two numbers that add up to target.\nvector<int> twoSum(vector<int>& nums, int target) {\n    // your solution here\n    return {};\n}\n`,
-  go: `package main\n\n// twoSum returns indices of the two numbers that add up to target.\nfunc twoSum(nums []int, target int) []int {\n\t// your solution here\n\treturn nil\n}\n`,
+  javascript: `// Two Sum — return indices of the two numbers that add up to target.
+function twoSum(nums, target) {
+  // your solution here
+  return [];
+}
+
+console.log(twoSum([2, 7, 11, 15], 9));
+`,
+  python: `# Two Sum — return indices of the two numbers that add up to target.
+def two_sum(nums, target):
+    # your solution here
+    return []
+
+
+print(two_sum([2, 7, 11, 15], 9))
+`,
+  java: `import java.util.*;
+
+public class Main {
+    // Two Sum — return indices of the two numbers that add up to target.
+    static int[] twoSum(int[] nums, int target) {
+        // your solution here
+        return new int[] {};
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Arrays.toString(twoSum(new int[] {2, 7, 11, 15}, 9)));
+    }
+}
+`,
+  cpp: `#include <iostream>
+#include <vector>
+using namespace std;
+
+// Two Sum — return indices of the two numbers that add up to target.
+vector<int> twoSum(vector<int>& nums, int target) {
+    // your solution here
+    return {};
+}
+
+int main() {
+    vector<int> nums = {2, 7, 11, 15};
+    vector<int> res = twoSum(nums, 9);
+    cout << "[";
+    for (size_t i = 0; i < res.size(); i++) cout << res[i] << (i + 1 < res.size() ? "," : "");
+    cout << "]" << endl;
+    return 0;
+}
+`,
+  go: `package main
+
+import "fmt"
+
+// twoSum returns indices of the two numbers that add up to target.
+func twoSum(nums []int, target int) []int {
+	// your solution here
+	return nil
+}
+
+func main() {
+	fmt.Println(twoSum([]int{2, 7, 11, 15}, 9))
+}
+`,
 };
 
 export function createRoom(input: CreateRoomInput): Promise<RoomDto> {

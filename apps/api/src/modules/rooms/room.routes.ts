@@ -2,8 +2,16 @@ import { Router } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { requireAuth } from '../../middleware/auth';
 import { validate, paginationQuerySchema } from '../../middleware/validate';
+import { execLimiter } from '../../middleware/rateLimit';
 import * as controller from './room.controller';
-import { createRoomSchema, joinParams, roomIdParams, snapshotParams } from './room.validation';
+import {
+  createRoomSchema,
+  executionParams,
+  joinParams,
+  roomIdParams,
+  runCodeSchema,
+  snapshotParams,
+} from './room.validation';
 
 export const roomRouter = Router();
 roomRouter.use(requireAuth);
@@ -37,4 +45,21 @@ roomRouter.get(
   '/:id/activity',
   validate({ params: roomIdParams, query: paginationQuerySchema }),
   asyncHandler(controller.activity),
+);
+
+roomRouter.post(
+  '/:id/run',
+  execLimiter,
+  validate({ params: roomIdParams, body: runCodeSchema }),
+  asyncHandler(controller.run),
+);
+roomRouter.get(
+  '/:id/executions',
+  validate({ params: roomIdParams, query: paginationQuerySchema }),
+  asyncHandler(controller.executions),
+);
+roomRouter.get(
+  '/:id/executions/:execId',
+  validate({ params: executionParams }),
+  asyncHandler(controller.executionDetail),
 );

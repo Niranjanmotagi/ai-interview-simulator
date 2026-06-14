@@ -5,22 +5,27 @@ import type {
   ChatMessageType,
   CreateRoomInput,
   RoomLanguage,
+  RunCodeInput,
   SnapshotReason,
 } from '@ai-interview/types';
 import {
   ActivityEvent,
   ChatMessage,
   CodeSnapshot,
+  Execution,
   Room,
   RoomParticipant,
   User,
   type ActivityEventDoc,
   type ChatMessageDoc,
   type CodeSnapshotDoc,
+  type ExecutionDoc,
   type RoomDoc,
   type RoomParticipantDoc,
 } from '../../models';
 import { ApiError } from '../../utils/ApiError';
+import { env } from '../../config/env';
+import { getExecutionService } from '../../execution';
 
 // Presence-chip / live-cursor palette (the design accents + a few neutrals).
 const PARTICIPANT_COLORS = [
@@ -296,6 +301,7 @@ export async function deleteRoom(userId: string, roomId: string): Promise<void> 
     ChatMessage.deleteMany({ roomId: room._id }),
     CodeSnapshot.deleteMany({ roomId: room._id }),
     ActivityEvent.deleteMany({ roomId: room._id }),
+    Execution.deleteMany({ roomId: room._id }),
   ]);
   await room.deleteOne();
 }
@@ -425,4 +431,98 @@ export async function recordActivity(
     type: input.type,
     meta: input.meta ?? null,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Secure code execution
+// ---------------------------------------------------------------------------
+
+/** REST entry point: membership-checked run. */
+export async function runInRoom(
+  userId: string,
+  roomId: string,
+  input: RunCodeInput,
+): Promise<ExecutionDoc> {
+  const { participant } = await getMembership(userId, roomId);
+  return performRun(roomId, userId, participant.displayName, input);
+}
+
+/**
+ * Records an Execution, runs it on the sandboxed executor, and persists the
+ * result. Also logs a `run` activity event. Shared by the REST endpoint and the
+ * Socket.IO gateway (which additionally broadcasts the result to the room).
+ */
+export async function performRun(
+  roomId: string,
+  requesterId: string,
+  requesterName: string,
+  input: RunCodeInput,
+): Promise<ExecutionDoc> {
+  const code = input.code ?? '';
+  if (Buffer.byteLength(code, 'utf8') > env.EXEC_MAX_CODE_BYTES) {
+    throw ApiError.badRequest('Code exceeds the maximum allowed size');
+  }
+  const stdin = input.stdin ?? '';
+
+  const execution = await Execution.create({
+    roomId,
+    requestedById: requesterId,
+    requestedByName: requesterName,
+    language: input.language,
+    code,
+    stdin,
+    status: 'running',
+  });
+
+  await recordActivity(roomId, {
+    userId: requesterId,
+    authorName: requesterName,
+    type: 'run',
+    meta: { language: input.language, executionId: execution._id.toString() },
+  });
+
+  try {
+    const result = await getExecutionService().run({ language: input.language, code, stdin });
+    execution.status = result.status;
+    execution.stdout = result.stdout;
+    execution.stderr = result.stderr;
+    execution.exitCode = result.exitCode;
+    execution.timeMs = result.timeMs;
+    execution.memoryKb = result.memoryKb;
+  } catch (err) {
+    execution.status = 'error';
+    execution.stderr = 'The execution engine failed to run this code.';
+  }
+  await execution.save();
+  return execution;
+}
+
+export async function listExecutions(
+  userId: string,
+  roomId: string,
+  page: number,
+  limit: number,
+): Promise<{ executions: ExecutionDoc[]; total: number }> {
+  const { room } = await getMembership(userId, roomId);
+  const [executions, total] = await Promise.all([
+    Execution.find({ roomId: room._id })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Execution.countDocuments({ roomId: room._id }),
+  ]);
+  return { executions, total };
+}
+
+export async function getExecution(
+  userId: string,
+  roomId: string,
+  execId: string,
+): Promise<ExecutionDoc> {
+  const { room } = await getMembership(userId, roomId);
+  const execution = await Execution.findOne({ _id: execId, roomId: room._id });
+  if (!execution) {
+    throw ApiError.notFound('Execution');
+  }
+  return execution;
 }

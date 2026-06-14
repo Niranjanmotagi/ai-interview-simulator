@@ -6,6 +6,7 @@ import * as service from './room.service';
 import {
   toActivityDto,
   toChatMessageDto,
+  toExecutionDto,
   toRoomDetailDto,
   toRoomDto,
   toSnapshotDto,
@@ -130,4 +131,30 @@ export async function activity(req: Request, res: Response): Promise<void> {
     limit,
   );
   sendSuccess(res, buildPaginated(events.map(toActivityDto), total, page, limit));
+}
+
+export async function run(req: Request, res: Response): Promise<void> {
+  const execution = await service.runInRoom(getAuth(req).sub, req.params.id as string, req.body);
+  sendSuccess(res, toExecutionDto(execution), 201);
+}
+
+export async function executions(req: Request, res: Response): Promise<void> {
+  const page = Number(req.query.page ?? 1);
+  const limit = Number(req.query.limit ?? 50);
+  const { executions: rows, total } = await service.listExecutions(
+    getAuth(req).sub,
+    req.params.id as string,
+    page,
+    limit,
+  );
+  sendSuccess(res, buildPaginated(rows.map(toExecutionDto), total, page, limit));
+}
+
+export async function executionDetail(req: Request, res: Response): Promise<void> {
+  const execution = await service.getExecution(
+    getAuth(req).sub,
+    req.params.id as string,
+    req.params.execId as string,
+  );
+  sendSuccess(res, toExecutionDto(execution));
 }

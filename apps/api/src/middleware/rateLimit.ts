@@ -47,3 +47,17 @@ export const aiLimiter = rateLimit({
     error: { code: 'RATE_LIMITED', message: 'AI request limit reached, try again later' },
   },
 });
+
+// Code execution is expensive (sandbox spin-up); cap per-user runs.
+export const execLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip,
+  keyGenerator: keyByUserOrIp,
+  message: {
+    success: false,
+    error: { code: 'RATE_LIMITED', message: 'Too many runs — wait a moment and try again' },
+  },
+});

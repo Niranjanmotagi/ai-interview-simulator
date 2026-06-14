@@ -22,3 +22,15 @@ export const snapshotParams = z
 export const joinParams = z
   .object({ code: z.string().trim().min(4).max(32) })
   .strict();
+
+export const runCodeSchema = z
+  .object({
+    language: languageSchema,
+    code: z.string().max(200_000),
+    stdin: z.string().max(50_000).optional(),
+  })
+  .strict();
+
+export const executionParams = z
+  .object({ id: objectIdSchema, execId: objectIdSchema })
+  .strict();

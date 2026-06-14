@@ -13,6 +13,7 @@ import { CollaborativeEditor } from '@/components/room/collaborative-editor';
 import { ParticipantsPanel } from '@/components/room/participants-panel';
 import { ChatPanel } from '@/components/room/chat-panel';
 import { ActivityMonitor } from '@/components/room/activity-monitor';
+import { OutputConsole } from '@/components/room/output-console';
 import { RoomTopBar } from '@/components/room/room-top-bar';
 
 export default function RoomPage() {
@@ -135,29 +136,40 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
           )}
         </aside>
 
-        {/* Center — the shared editor. Absolute inset gives Monaco a concrete
-            box (height:100% doesn't resolve reliably inside a flex child). */}
-        <main className="relative min-w-0 flex-1 bg-[#0c0d11]">
-          <div className="absolute inset-0">
-            <CollaborativeEditor
-              ydoc={r.ydoc}
-              languageId={MONACO_LANGUAGE[r.language]}
-              readOnly={r.status === 'ended'}
-              remoteCursors={r.remoteCursors}
-              selfSocketId={r.selfSocketId}
-              onAwareness={r.sendAwareness}
-              onActivity={r.reportActivity}
-            />
+        {/* Center — shared editor (top) + output console (bottom). The editor's
+            absolute inset gives Monaco a concrete box (height:100% doesn't
+            resolve reliably inside a flex child). */}
+        <main className="flex min-w-0 flex-1 flex-col bg-[#0c0d11]">
+          <div className="relative min-h-0 flex-1">
+            <div className="absolute inset-0">
+              <CollaborativeEditor
+                ydoc={r.ydoc}
+                languageId={MONACO_LANGUAGE[r.language]}
+                readOnly={r.status === 'ended'}
+                remoteCursors={r.remoteCursors}
+                selfSocketId={r.selfSocketId}
+                onAwareness={r.sendAwareness}
+                onActivity={r.reportActivity}
+              />
+            </div>
+
+            {r.status === 'ended' && (
+              <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
+                <p className="text-lg font-medium text-white/90">This interview has ended.</p>
+                <Link href="/rooms" className="rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15">
+                  Back to rooms
+                </Link>
+              </div>
+            )}
           </div>
 
-          {r.status === 'ended' && (
-            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
-              <p className="text-lg font-medium text-white/90">This interview has ended.</p>
-              <Link href="/rooms" className="rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15">
-                Back to rooms
-              </Link>
-            </div>
-          )}
+          <OutputConsole
+            execStatus={r.execStatus}
+            execRunner={r.execRunner}
+            lastExecution={r.lastExecution}
+            canRun={r.status === 'connected'}
+            onRun={r.runCode}
+          />
         </main>
 
         {/* Right rail — chat */}

@@ -12,6 +12,8 @@ import {
   type CodeSnapshotListItemDto,
   type EditorPosition,
   type EditorSelection,
+  type ExecStartedEvent,
+  type ExecutionDto,
   type PresenceUser,
   type RoomDto,
   type RoomLanguage,
@@ -64,12 +66,16 @@ export interface UseRoomResult {
   typingUsers: TypingUser[];
   activity: ActivityEventDto[];
   snapshotJustCreated: CodeSnapshotListItemDto | null;
+  execStatus: 'idle' | 'running';
+  execRunner: string | null;
+  lastExecution: ExecutionDto | null;
   sendChat: (text: string) => void;
   sendTyping: (isTyping: boolean) => void;
   sendAwareness: (cursor: EditorPosition | null, selection: EditorSelection | null) => void;
   changeLanguage: (language: RoomLanguage) => void;
   createSnapshot: (label?: string) => void;
   reportActivity: (type: ActivityType, meta?: Record<string, unknown>) => void;
+  runCode: (stdin?: string) => void;
 }
 
 /**
@@ -98,6 +104,9 @@ export function useRoom(roomCode: string): UseRoomResult {
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [activity, setActivity] = useState<ActivityEventDto[]>([]);
   const [snapshotJustCreated, setSnapshotJustCreated] = useState<CodeSnapshotListItemDto | null>(null);
+  const [execStatus, setExecStatus] = useState<'idle' | 'running'>('idle');
+  const [execRunner, setExecRunner] = useState<string | null>(null);
+  const [lastExecution, setLastExecution] = useState<ExecutionDto | null>(null);
 
   useEffect(() => {
     const ydoc = ydocRef.current;
@@ -203,6 +212,18 @@ export function useRoom(roomCode: string): UseRoomResult {
         setSnapshotJustCreated(snap);
       });
 
+      socket.on(SOCKET_EVENTS.EXEC_STARTED, (e: ExecStartedEvent) => {
+        setExecStatus('running');
+        setExecRunner(e.requestedByName);
+        setLastExecution(null);
+      });
+
+      socket.on(SOCKET_EVENTS.EXEC_RESULT, (exec: ExecutionDto) => {
+        setExecStatus('idle');
+        setExecRunner(null);
+        setLastExecution(exec);
+      });
+
       socket.on(SOCKET_EVENTS.ROOM_ENDED, () => setStatus('ended'));
 
       socket.on(SOCKET_EVENTS.ERROR, (e: { code: string; message: string }) => {
@@ -278,6 +299,14 @@ export function useRoom(roomCode: string): UseRoomResult {
     socketRef.current?.emit(SOCKET_EVENTS.ACTIVITY, { type, meta });
   }, []);
 
+  const runCode = useCallback(
+    (stdin?: string) => {
+      const code = ydocRef.current.getText('monaco').toString();
+      socketRef.current?.emit(SOCKET_EVENTS.EXEC_RUN, { language, code, stdin });
+    },
+    [language],
+  );
+
   return {
     status,
     errorMessage,
@@ -292,11 +321,15 @@ export function useRoom(roomCode: string): UseRoomResult {
     typingUsers,
     activity,
     snapshotJustCreated,
+    execStatus,
+    execRunner,
+    lastExecution,
     sendChat,
     sendTyping,
     sendAwareness,
     changeLanguage,
     createSnapshot,
     reportActivity,
+    runCode,
   };
 }

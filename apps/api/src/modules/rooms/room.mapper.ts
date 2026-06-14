@@ -3,6 +3,7 @@ import type {
   ChatMessageDto,
   CodeSnapshotDto,
   CodeSnapshotListItemDto,
+  ExecutionDto,
   RoomDetailDto,
   RoomDto,
   RoomParticipantDto,
@@ -12,6 +13,7 @@ import type {
   ActivityEventDoc,
   ChatMessageDoc,
   CodeSnapshotDoc,
+  ExecutionDoc,
   RoomDoc,
   RoomParticipantDoc,
 } from '../../models';
@@ -104,6 +106,23 @@ export function toSnapshotDto(s: CodeSnapshotDoc): CodeSnapshotDto {
     ...toSnapshotListItemDto(s),
     roomId: s.roomId.toString(),
     code: s.code,
+  };
+}
+
+export function toExecutionDto(e: ExecutionDoc): ExecutionDto {
+  return {
+    id: e._id.toString(),
+    roomId: e.roomId.toString(),
+    requestedById: e.requestedById.toString(),
+    requestedByName: e.requestedByName,
+    language: e.language,
+    status: e.status,
+    stdout: e.stdout,
+    stderr: e.stderr,
+    exitCode: e.exitCode,
+    timeMs: e.timeMs,
+    memoryKb: e.memoryKb,
+    createdAt: e.createdAt.toISOString(),
   };
 }
 
