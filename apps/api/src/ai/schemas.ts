@@ -99,3 +99,51 @@ export const improvementPlanSchema = z.object({
     .max(8),
 });
 export type ImprovementPlanOutput = z.infer<typeof improvementPlanSchema>;
+
+// ---------------------------------------------------------------------------
+// CodeSync — coding interview assistant
+// ---------------------------------------------------------------------------
+
+const score100 = z.number().min(0).max(100);
+
+export const codingQuestionSchema = z.object({
+  title: z.string().min(3),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+  prompt: z.string().min(20),
+  examples: z
+    .array(
+      z.object({
+        input: z.string(),
+        output: z.string(),
+        explanation: z.string().nullable(),
+      }),
+    )
+    .min(1)
+    .max(4),
+  constraints: z.array(z.string()).max(8),
+});
+export type CodingQuestionOutput = z.infer<typeof codingQuestionSchema>;
+
+export const codingHintSchema = z.object({ hint: z.string().min(5) });
+export type CodingHintOutput = z.infer<typeof codingHintSchema>;
+
+export const codingExplanationSchema = z.object({
+  explanation: z.string().min(20),
+  complexity: z.object({ time: z.string(), space: z.string() }),
+});
+export type CodingExplanationOutput = z.infer<typeof codingExplanationSchema>;
+
+export const codeEvaluationSchema = z.object({
+  overallScore: score100,
+  correctness: score100,
+  problemSolving: score100,
+  codeQuality: score100,
+  communication: score100,
+  timeComplexity: z.string(),
+  spaceComplexity: z.string(),
+  strengths: z.array(z.string()).min(1).max(8),
+  weaknesses: z.array(z.string()).max(8),
+  suggestions: z.array(z.string()).max(8),
+  verdict: z.string().min(10),
+});
+export type CodeEvaluationOutput = z.infer<typeof codeEvaluationSchema>;

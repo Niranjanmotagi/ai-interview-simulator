@@ -2,9 +2,15 @@
 
 import type {
   ActivityEventDto,
+  AiCodeInput,
+  AiExplanationDto,
+  AiHintDto,
+  AiReportDto,
   ChatMessageDto,
   CodeSnapshotListItemDto,
+  CodingQuestionDto,
   CreateRoomInput,
+  GenerateQuestionInput,
   Paginated,
   RoomDetailDto,
   RoomDto,
@@ -131,4 +137,26 @@ export function listActivity(id: string, page = 1, limit = 50): Promise<Paginate
 
 export function listMessages(id: string, page = 1, limit = 100): Promise<Paginated<ChatMessageDto>> {
   return api<Paginated<ChatMessageDto>>(`/rooms/${id}/messages?page=${page}&limit=${limit}`);
+}
+
+// --- AI assistant ---
+
+export function generateQuestion(id: string, input: GenerateQuestionInput): Promise<CodingQuestionDto> {
+  return api<CodingQuestionDto>(`/rooms/${id}/ai/question`, { method: 'POST', body: input });
+}
+
+export function aiHint(id: string, input: AiCodeInput): Promise<AiHintDto> {
+  return api<AiHintDto>(`/rooms/${id}/ai/hint`, { method: 'POST', body: input });
+}
+
+export function aiExplain(id: string, input: AiCodeInput): Promise<AiExplanationDto> {
+  return api<AiExplanationDto>(`/rooms/${id}/ai/explain`, { method: 'POST', body: input });
+}
+
+export function aiEvaluate(id: string, input: AiCodeInput): Promise<AiReportDto> {
+  return api<AiReportDto>(`/rooms/${id}/ai/evaluate`, { method: 'POST', body: input });
+}
+
+export function listReports(id: string, page = 1, limit = 20): Promise<Paginated<AiReportDto>> {
+  return api<Paginated<AiReportDto>>(`/rooms/${id}/ai/reports?page=${page}&limit=${limit}`);
 }

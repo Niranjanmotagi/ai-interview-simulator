@@ -168,6 +168,92 @@ export function buildSummaryPrompt(input: SummaryInput): GenerateJsonRequest {
   };
 }
 
+// ---------------------------------------------------------------------------
+// CodeSync — coding interview assistant
+// ---------------------------------------------------------------------------
+
+export function buildCodingQuestionPrompt(input: {
+  difficulty: string;
+  topic: string | null;
+  language: string;
+}): GenerateJsonRequest {
+  return {
+    task: 'coding_question',
+    tier: 'fast',
+    temperature: 0.9,
+    system: `You are a senior interviewer at a top tech company creating an original ${input.difficulty} coding interview problem${input.topic ? ` about ${input.topic}` : ''}. ${DATA_GUARDRAIL}`,
+    user: [
+      'Generate ONE self-contained coding problem as JSON:',
+      '{"title": string, "difficulty": "easy"|"medium"|"hard", "prompt": string (clear problem statement, 2-5 sentences), "examples": [{"input": string, "output": string, "explanation": string|null}] (1-3), "constraints": string[] (input bounds, 1-5)}.',
+      `Target difficulty: ${input.difficulty}. The candidate will solve it in ${input.language}, but keep the problem language-agnostic.`,
+      input.topic ? dataBlock('topic', input.topic) : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
+    context: { difficulty: input.difficulty, topic: input.topic },
+  };
+}
+
+export function buildCodingHintPrompt(input: {
+  problem: string;
+  language: string;
+  code: string;
+}): GenerateJsonRequest {
+  return {
+    task: 'coding_hint',
+    tier: 'fast',
+    temperature: 0.5,
+    system: `You are a helpful interview assistant. Give ONE concise, nudging hint that guides the candidate's thinking WITHOUT revealing the full solution or writing code. ${DATA_GUARDRAIL}`,
+    user: [
+      'Return JSON: {"hint": string (1-3 sentences, no code, no full algorithm)}.',
+      dataBlock('problem', input.problem || '(no problem statement provided)'),
+      dataBlock('current_code', input.code || '(empty)'),
+    ].join('\n\n'),
+    context: { code: input.code },
+  };
+}
+
+export function buildCodingExplainPrompt(input: {
+  language: string;
+  code: string;
+}): GenerateJsonRequest {
+  return {
+    task: 'coding_explain',
+    tier: 'fast',
+    temperature: 0.3,
+    system: `You explain code clearly and estimate its complexity accurately. ${DATA_GUARDRAIL}`,
+    user: [
+      `Explain this ${input.language} code. Return JSON: {"explanation": string (what the code does, step by step, 3-6 sentences), "complexity": {"time": string (Big-O), "space": string (Big-O)}}.`,
+      dataBlock('code', input.code || '(empty)'),
+    ].join('\n\n'),
+    context: { code: input.code },
+  };
+}
+
+export function buildCodeEvaluationPrompt(input: {
+  problem: string;
+  language: string;
+  code: string;
+}): GenerateJsonRequest {
+  return {
+    task: 'code_evaluation',
+    tier: 'smart',
+    temperature: 0.2,
+    system:
+      'You are a rigorous but fair technical interviewer evaluating a candidate\'s code submission. ' +
+      'Score each dimension 0-100 (50 = meets bar, 80+ = strong). Be specific and honest. ' +
+      DATA_GUARDRAIL,
+    user: [
+      'Evaluate the submission. Return JSON:',
+      '{"overallScore": 0-100, "correctness": 0-100, "problemSolving": 0-100, "codeQuality": 0-100, "communication": 0-100, "timeComplexity": string (Big-O), "spaceComplexity": string (Big-O), "strengths": string[] (1-5), "weaknesses": string[] (0-5), "suggestions": string[] (0-5, concrete improvements), "verdict": string (1-2 sentence hiring-signal summary)}.',
+      'correctness: does it solve the problem incl. edge cases; problemSolving: approach/algorithm choice; codeQuality: readability, naming, structure; communication: comments/clarity.',
+      dataBlock('problem', input.problem || '(no problem statement provided)'),
+      dataBlock('submission', `language: ${input.language}\n${input.code || '(empty)'}`),
+    ].join('\n\n'),
+    context: { code: input.code, language: input.language },
+  };
+}
+
 export function buildImprovementPlanPrompt(input: {
   targetRole: string;
   topWeaknesses: string[];

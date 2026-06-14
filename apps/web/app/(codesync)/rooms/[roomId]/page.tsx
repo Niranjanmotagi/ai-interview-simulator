@@ -14,6 +14,7 @@ import { ParticipantsPanel } from '@/components/room/participants-panel';
 import { ChatPanel } from '@/components/room/chat-panel';
 import { ActivityMonitor } from '@/components/room/activity-monitor';
 import { OutputConsole } from '@/components/room/output-console';
+import { AiAssistant } from '@/components/room/ai-assistant';
 import { RoomTopBar } from '@/components/room/room-top-bar';
 
 export default function RoomPage() {
@@ -171,6 +172,13 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
           />
         </aside>
       </div>
+
+      <AiAssistant
+        roomId={roomId}
+        language={r.language}
+        isInterviewer={isInterviewer}
+        getCode={() => r.ydoc.getText('monaco').toString()}
+      />
 
       {/* Mobile/tablet panel toggles */}
       <div className="flex items-center justify-center gap-3 border-t border-zinc-200 bg-white p-2 xl:hidden">

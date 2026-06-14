@@ -5,6 +5,7 @@ import { getOnlineUserIds } from '../../realtime/roomRegistry';
 import * as service from './room.service';
 import {
   toActivityDto,
+  toAiReportDto,
   toChatMessageDto,
   toExecutionDto,
   toRoomDetailDto,
@@ -157,4 +158,40 @@ export async function executionDetail(req: Request, res: Response): Promise<void
     req.params.execId as string,
   );
   sendSuccess(res, toExecutionDto(execution));
+}
+
+// --- AI assistant ---
+
+export async function aiQuestion(req: Request, res: Response): Promise<void> {
+  const { question } = await service.generateCodingQuestion(
+    getAuth(req).sub,
+    req.params.id as string,
+    req.body,
+  );
+  sendSuccess(res, question, 201);
+}
+
+export async function aiHint(req: Request, res: Response): Promise<void> {
+  sendSuccess(res, await service.getCodingHint(getAuth(req).sub, req.params.id as string, req.body));
+}
+
+export async function aiExplain(req: Request, res: Response): Promise<void> {
+  sendSuccess(res, await service.explainCode(getAuth(req).sub, req.params.id as string, req.body));
+}
+
+export async function aiEvaluate(req: Request, res: Response): Promise<void> {
+  const report = await service.evaluateCode(getAuth(req).sub, req.params.id as string, req.body);
+  sendSuccess(res, toAiReportDto(report), 201);
+}
+
+export async function aiReports(req: Request, res: Response): Promise<void> {
+  const page = Number(req.query.page ?? 1);
+  const limit = Number(req.query.limit ?? 20);
+  const { reports, total } = await service.listReports(
+    getAuth(req).sub,
+    req.params.id as string,
+    page,
+    limit,
+  );
+  sendSuccess(res, buildPaginated(reports.map(toAiReportDto), total, page, limit));
 }

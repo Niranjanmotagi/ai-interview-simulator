@@ -2,14 +2,20 @@ import crypto from 'node:crypto';
 import { Types } from 'mongoose';
 import type {
   ActivityType,
+  AiCodeInput,
+  AiExplanationDto,
+  AiHintDto,
   ChatMessageType,
+  CodingQuestionDto,
   CreateRoomInput,
+  GenerateQuestionInput,
   RoomLanguage,
   RunCodeInput,
   SnapshotReason,
 } from '@ai-interview/types';
 import {
   ActivityEvent,
+  AIReport,
   ChatMessage,
   CodeSnapshot,
   Execution,
@@ -17,6 +23,7 @@ import {
   RoomParticipant,
   User,
   type ActivityEventDoc,
+  type AIReportDoc,
   type ChatMessageDoc,
   type CodeSnapshotDoc,
   type ExecutionDoc,
@@ -26,6 +33,17 @@ import {
 import { ApiError } from '../../utils/ApiError';
 import { env } from '../../config/env';
 import { getExecutionService } from '../../execution';
+import {
+  buildCodeEvaluationPrompt,
+  buildCodingExplainPrompt,
+  buildCodingHintPrompt,
+  buildCodingQuestionPrompt,
+  codeEvaluationSchema,
+  codingExplanationSchema,
+  codingHintSchema,
+  codingQuestionSchema,
+  getAIService,
+} from '../../ai';
 
 // Presence-chip / live-cursor palette (the design accents + a few neutrals).
 const PARTICIPANT_COLORS = [
@@ -302,6 +320,7 @@ export async function deleteRoom(userId: string, roomId: string): Promise<void> 
     CodeSnapshot.deleteMany({ roomId: room._id }),
     ActivityEvent.deleteMany({ roomId: room._id }),
     Execution.deleteMany({ roomId: room._id }),
+    AIReport.deleteMany({ roomId: room._id }),
   ]);
   await room.deleteOne();
 }
@@ -525,4 +544,119 @@ export async function getExecution(
     throw ApiError.notFound('Execution');
   }
   return execution;
+}
+
+// ---------------------------------------------------------------------------
+// AI interview assistant
+// ---------------------------------------------------------------------------
+
+/** Interviewer generates a problem; it becomes the room's problem statement. */
+export async function generateCodingQuestion(
+  userId: string,
+  roomId: string,
+  input: GenerateQuestionInput,
+): Promise<{ question: CodingQuestionDto; room: RoomDoc }> {
+  const { room } = await requireHost(userId, roomId);
+  const ai = getAIService();
+  const { data } = await ai.generateJson(
+    buildCodingQuestionPrompt({
+      difficulty: input.difficulty ?? 'medium',
+      topic: input.topic ?? null,
+      language: room.language,
+    }),
+    codingQuestionSchema,
+  );
+
+  // Persist as the room's shared problem statement so the candidate sees it.
+  const formatted = [
+    data.title,
+    '',
+    data.prompt,
+    '',
+    'Examples:',
+    ...data.examples.map((e) => `  Input: ${e.input}\n  Output: ${e.output}${e.explanation ? `\n  ${e.explanation}` : ''}`),
+    data.constraints.length ? '\nConstraints:' : '',
+    ...data.constraints.map((c) => `  - ${c}`),
+  ]
+    .join('\n')
+    .slice(0, 8000);
+  room.problemPrompt = formatted;
+  await room.save();
+
+  return { question: data, room };
+}
+
+export async function getCodingHint(
+  userId: string,
+  roomId: string,
+  input: AiCodeInput,
+): Promise<AiHintDto> {
+  const { room } = await getMembership(userId, roomId);
+  const ai = getAIService();
+  const { data } = await ai.generateJson(
+    buildCodingHintPrompt({
+      problem: room.problemPrompt ?? '',
+      language: input.language,
+      code: input.code ?? '',
+    }),
+    codingHintSchema,
+  );
+  return data;
+}
+
+export async function explainCode(
+  userId: string,
+  roomId: string,
+  input: AiCodeInput,
+): Promise<AiExplanationDto> {
+  await getMembership(userId, roomId);
+  const ai = getAIService();
+  const { data } = await ai.generateJson(
+    buildCodingExplainPrompt({ language: input.language, code: input.code ?? '' }),
+    codingExplanationSchema,
+  );
+  return data;
+}
+
+/** Interviewer-only: evaluate the current submission and persist a report. */
+export async function evaluateCode(
+  userId: string,
+  roomId: string,
+  input: AiCodeInput,
+): Promise<AIReportDoc> {
+  const { room, participant } = await requireHost(userId, roomId);
+  const ai = getAIService();
+  const { data } = await ai.generateJson(
+    buildCodeEvaluationPrompt({
+      problem: room.problemPrompt ?? '',
+      language: input.language,
+      code: input.code ?? '',
+    }),
+    codeEvaluationSchema,
+  );
+  return AIReport.create({
+    roomId: room._id,
+    createdById: userId,
+    createdByName: participant.displayName,
+    language: input.language,
+    code: input.code ?? '',
+    ...data,
+  });
+}
+
+export async function listReports(
+  userId: string,
+  roomId: string,
+  page: number,
+  limit: number,
+): Promise<{ reports: AIReportDoc[]; total: number }> {
+  const { room } = await getMembership(userId, roomId);
+  const [reports, total] = await Promise.all([
+    AIReport.find({ roomId: room._id })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    AIReport.countDocuments({ roomId: room._id }),
+  ]);
+  return { reports, total };
 }

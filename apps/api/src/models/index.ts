@@ -16,3 +16,4 @@ export { ChatMessage, type ChatMessageDoc } from './ChatMessage';
 export { CodeSnapshot, type CodeSnapshotDoc } from './CodeSnapshot';
 export { ActivityEvent, type ActivityEventDoc } from './ActivityEvent';
 export { Execution, type ExecutionDoc } from './Execution';
+export { AIReport, type AIReportDoc } from './AIReport';

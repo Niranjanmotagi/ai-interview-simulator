@@ -34,3 +34,17 @@ export const runCodeSchema = z
 export const executionParams = z
   .object({ id: objectIdSchema, execId: objectIdSchema })
   .strict();
+
+export const generateQuestionSchema = z
+  .object({
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+    topic: z.string().trim().max(120).nullish(),
+  })
+  .strict();
+
+export const aiCodeSchema = z
+  .object({
+    language: languageSchema,
+    code: z.string().max(200_000),
+  })
+  .strict();

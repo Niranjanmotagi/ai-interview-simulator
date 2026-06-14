@@ -43,6 +43,14 @@ export class MockAIProvider implements AIService {
         return this.summary(req);
       case 'improvement_plan':
         return this.improvementPlan(req);
+      case 'coding_question':
+        return this.codingQuestion(req);
+      case 'coding_hint':
+        return this.codingHint(req);
+      case 'coding_explain':
+        return this.codingExplain(req);
+      case 'code_evaluation':
+        return this.codeEvaluation(req);
       default:
         throw new Error(`MockAIProvider: unknown task ${String(req.task)}`);
     }
@@ -339,6 +347,126 @@ export class MockAIProvider implements AIService {
     });
     return { items };
   }
+
+  // --- CodeSync coding assistant (deterministic, input-sensitive) ----------
+
+  private codingQuestion(req: GenerateJsonRequest) {
+    const difficulty = String(req.context?.difficulty ?? 'easy') as 'easy' | 'medium' | 'hard';
+    const bank = {
+      easy: {
+        title: 'Two Sum',
+        prompt:
+          'Given an array of integers nums and an integer target, return the indices of the two numbers that add up to target. Each input has exactly one solution and you may not use the same element twice.',
+        examples: [{ input: 'nums = [2,7,11,15], target = 9', output: '[0,1]', explanation: 'nums[0] + nums[1] == 9.' }],
+        constraints: ['2 <= nums.length <= 10^4', '-10^9 <= nums[i] <= 10^9'],
+      },
+      medium: {
+        title: 'Group Anagrams',
+        prompt:
+          'Given an array of strings, group the anagrams together. An anagram is a word formed by rearranging the letters of another. Return the groups in any order.',
+        examples: [{ input: '["eat","tea","tan","ate","nat","bat"]', output: '[["bat"],["nat","tan"],["ate","eat","tea"]]', explanation: null }],
+        constraints: ['1 <= strs.length <= 10^4', '0 <= strs[i].length <= 100'],
+      },
+      hard: {
+        title: 'LRU Cache',
+        prompt:
+          'Design a data structure for a Least Recently Used (LRU) cache supporting get(key) and put(key, value) in O(1) average time. When capacity is exceeded, evict the least recently used item.',
+        examples: [{ input: 'capacity = 2; put(1,1); put(2,2); get(1); put(3,3); get(2)', output: '1, then -1', explanation: 'Key 2 was evicted as least recently used.' }],
+        constraints: ['1 <= capacity <= 3000', 'At most 10^5 calls to get and put'],
+      },
+    };
+    const q = bank[difficulty] ?? bank.easy;
+    return { ...q, difficulty };
+  }
+
+  private codingHint(req: GenerateJsonRequest) {
+    const code = String(req.context?.code ?? '');
+    const nested = hasNestedLoop(code);
+    const hint = nested
+      ? 'Your current approach looks like it scans the data more than once. Consider a hash map to remember values you have already seen — that often turns an O(n²) scan into a single O(n) pass.'
+      : code.trim().length === 0
+        ? 'Start by clarifying the brute-force solution, then ask what repeated work you could cache to speed it up.'
+        : 'Think about the edge cases (empty input, duplicates, negative numbers) and whether a single pass with extra space could simplify the logic.';
+    return { hint };
+  }
+
+  private codingExplain(req: GenerateJsonRequest) {
+    const code = String(req.context?.code ?? '');
+    const nested = hasNestedLoop(code);
+    return {
+      explanation:
+        code.trim().length === 0
+          ? 'The editor is currently empty, so there is nothing to explain yet. Write a solution and ask again.'
+          : 'This code reads the input, iterates over the elements, and computes a result that it returns at the end. ' +
+            (nested
+              ? 'It uses nested iteration, comparing pairs of elements, which is the main cost.'
+              : 'It performs a single pass and uses auxiliary storage to avoid repeated work.'),
+      complexity: { time: nested ? 'O(n^2)' : 'O(n)', space: usesMap(code) ? 'O(n)' : 'O(1)' },
+    };
+  }
+
+  private codeEvaluation(req: GenerateJsonRequest) {
+    const code = String(req.context?.code ?? '');
+    const lines = code.split('\n').filter((l) => l.trim().length > 0).length;
+    const nested = hasNestedLoop(code);
+    const map = usesMap(code);
+    const hasReturn = /\breturn\b|println|printf|console\.log|fmt\.Print|cout/i.test(code);
+    const hasComments = /\/\/|#|\/\*/.test(code);
+
+    const correctness = clampPct(50 + (hasReturn ? 25 : 0) + (lines >= 4 ? 15 : 0) + (map ? 5 : 0));
+    const problemSolving = clampPct(map ? 82 : nested ? 52 : 66);
+    const codeQuality = clampPct(48 + (hasComments ? 16 : 0) + (lines > 0 && lines <= 60 ? 18 : 0) + (map ? 6 : 0));
+    const communication = clampPct(hasComments ? 72 : 54);
+    const overall = clampPct((correctness + problemSolving + codeQuality + communication) / 4);
+
+    const strengths: string[] = [];
+    if (hasReturn) strengths.push('Produces and returns/prints a result.');
+    if (map) strengths.push('Uses a hash map to keep the core loop linear.');
+    if (hasComments) strengths.push('Includes comments that aid readability.');
+    if (strengths.length === 0) strengths.push('Provides a starting structure to build on.');
+
+    const weaknesses: string[] = [];
+    if (nested) weaknesses.push('Nested iteration suggests an O(n²) approach that may not scale.');
+    if (!hasComments) weaknesses.push('No comments — intent is harder to follow.');
+    if (lines < 4) weaknesses.push('Solution looks incomplete or very short.');
+
+    const suggestions: string[] = [];
+    if (nested) suggestions.push('Trade space for time with a set/map to remove the inner loop.');
+    if (!hasComments) suggestions.push('Add a brief comment explaining the algorithm and key invariant.');
+    suggestions.push('Add handling for edge cases: empty input, duplicates, and boundary values.');
+
+    return {
+      overallScore: overall,
+      correctness,
+      problemSolving,
+      codeQuality,
+      communication,
+      timeComplexity: nested ? 'O(n^2)' : 'O(n)',
+      spaceComplexity: map ? 'O(n)' : 'O(1)',
+      strengths,
+      weaknesses,
+      suggestions: suggestions.slice(0, 5),
+      verdict:
+        overall >= 75
+          ? 'Strong submission — correct approach with good complexity; minor polish needed.'
+          : overall >= 55
+            ? 'Reasonable attempt that meets the bar but has clear room to improve.'
+            : 'Below bar — the approach needs rework on correctness and efficiency.',
+    };
+  }
+}
+
+function hasNestedLoop(code: string): boolean {
+  const loops = (code.match(/\b(for|while)\b/g) ?? []).length;
+  return loops >= 2;
+}
+
+function usesMap(code: string): boolean {
+  return /\b(map|dict|set|hashmap|unordered_map|defaultdict|counter)\b|\{\s*\}|new Map\(|new Set\(/i.test(code);
+}
+
+function clampPct(n: number): number {
+  return Math.round(Math.max(0, Math.min(100, n)));
 }
 
 function clamp10(n: number): number {

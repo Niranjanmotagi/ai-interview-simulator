@@ -569,3 +569,60 @@ export interface ExecStartedEvent {
   requestedByName: string;
   language: RoomLanguage;
 }
+
+// ---------------------------------------------------------------------------
+// AI interview assistant (CodeSync)
+// ---------------------------------------------------------------------------
+
+export interface CodingQuestionExample {
+  input: string;
+  output: string;
+  explanation: string | null;
+}
+
+export interface CodingQuestionDto {
+  title: string;
+  difficulty: Difficulty;
+  prompt: string;
+  examples: CodingQuestionExample[];
+  constraints: string[];
+}
+
+export interface GenerateQuestionInput {
+  difficulty?: Difficulty;
+  topic?: string | null;
+}
+
+/** Body for hint / explain / evaluate — the current editor code + language. */
+export interface AiCodeInput {
+  language: RoomLanguage;
+  code: string;
+}
+
+export interface AiHintDto {
+  hint: string;
+}
+
+export interface AiExplanationDto {
+  explanation: string;
+  complexity: { time: string; space: string };
+}
+
+export interface AiReportDto {
+  id: string;
+  roomId: string;
+  language: RoomLanguage;
+  createdByName: string;
+  overallScore: number; // 0–100
+  correctness: number; // 0–100
+  problemSolving: number; // 0–100
+  codeQuality: number; // 0–100
+  communication: number; // 0–100
+  timeComplexity: string;
+  spaceComplexity: string;
+  strengths: string[];
+  weaknesses: string[];
+  suggestions: string[];
+  verdict: string;
+  createdAt: string;
+}

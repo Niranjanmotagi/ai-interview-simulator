@@ -8,7 +8,12 @@ export type AITask =
   | 'question_gen'
   | 'evaluation'
   | 'summary'
-  | 'improvement_plan';
+  | 'improvement_plan'
+  // CodeSync — collaborative coding interview assistant
+  | 'coding_question'
+  | 'coding_hint'
+  | 'coding_explain'
+  | 'code_evaluation';
 
 export interface AIUsage {
   tokensIn: number;

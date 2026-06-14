@@ -1,5 +1,6 @@
 import type {
   ActivityEventDto,
+  AiReportDto,
   ChatMessageDto,
   CodeSnapshotDto,
   CodeSnapshotListItemDto,
@@ -11,6 +12,7 @@ import type {
 } from '@ai-interview/types';
 import type {
   ActivityEventDoc,
+  AIReportDoc,
   ChatMessageDoc,
   CodeSnapshotDoc,
   ExecutionDoc,
@@ -123,6 +125,27 @@ export function toExecutionDto(e: ExecutionDoc): ExecutionDto {
     timeMs: e.timeMs,
     memoryKb: e.memoryKb,
     createdAt: e.createdAt.toISOString(),
+  };
+}
+
+export function toAiReportDto(r: AIReportDoc): AiReportDto {
+  return {
+    id: r._id.toString(),
+    roomId: r.roomId.toString(),
+    language: r.language,
+    createdByName: r.createdByName,
+    overallScore: r.overallScore,
+    correctness: r.correctness,
+    problemSolving: r.problemSolving,
+    codeQuality: r.codeQuality,
+    communication: r.communication,
+    timeComplexity: r.timeComplexity,
+    spaceComplexity: r.spaceComplexity,
+    strengths: r.strengths,
+    weaknesses: r.weaknesses,
+    suggestions: r.suggestions,
+    verdict: r.verdict,
+    createdAt: r.createdAt.toISOString(),
   };
 }
 

@@ -2,11 +2,13 @@ import { Router } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { requireAuth } from '../../middleware/auth';
 import { validate, paginationQuerySchema } from '../../middleware/validate';
-import { execLimiter } from '../../middleware/rateLimit';
+import { aiLimiter, execLimiter } from '../../middleware/rateLimit';
 import * as controller from './room.controller';
 import {
+  aiCodeSchema,
   createRoomSchema,
   executionParams,
+  generateQuestionSchema,
   joinParams,
   roomIdParams,
   runCodeSchema,
@@ -62,4 +64,35 @@ roomRouter.get(
   '/:id/executions/:execId',
   validate({ params: executionParams }),
   asyncHandler(controller.executionDetail),
+);
+
+// AI assistant (Gemini-backed; mock provider offline). Rate-limited per user.
+roomRouter.post(
+  '/:id/ai/question',
+  aiLimiter,
+  validate({ params: roomIdParams, body: generateQuestionSchema }),
+  asyncHandler(controller.aiQuestion),
+);
+roomRouter.post(
+  '/:id/ai/hint',
+  aiLimiter,
+  validate({ params: roomIdParams, body: aiCodeSchema }),
+  asyncHandler(controller.aiHint),
+);
+roomRouter.post(
+  '/:id/ai/explain',
+  aiLimiter,
+  validate({ params: roomIdParams, body: aiCodeSchema }),
+  asyncHandler(controller.aiExplain),
+);
+roomRouter.post(
+  '/:id/ai/evaluate',
+  aiLimiter,
+  validate({ params: roomIdParams, body: aiCodeSchema }),
+  asyncHandler(controller.aiEvaluate),
+);
+roomRouter.get(
+  '/:id/ai/reports',
+  validate({ params: roomIdParams, query: paginationQuerySchema }),
+  asyncHandler(controller.aiReports),
 );
