@@ -6,6 +6,7 @@ const PROTECTED_PREFIXES = [
   '/interviews',
   '/reports',
   '/settings',
+  '/rooms',
 ];
 const AUTH_PAGES = ['/login', '/register'];
 
@@ -36,5 +37,5 @@ export function middleware(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/resumes/:path*', '/interviews/:path*', '/reports/:path*', '/settings/:path*', '/login', '/register'],
+  matcher: ['/dashboard/:path*', '/resumes/:path*', '/interviews/:path*', '/reports/:path*', '/settings/:path*', '/rooms/:path*', '/login', '/register'],
 };

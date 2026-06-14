@@ -330,8 +330,13 @@ function safe<T>(
   return (payload: T) => {
     Promise.resolve(handler(payload)).catch((err) => {
       logger.error({ err, socketId: socket.id }, 'Socket handler error');
+      // Surface the operational error code (e.g. ROOM_ENDED) so the client can react.
+      const code =
+        err && typeof err === 'object' && 'code' in err && typeof (err as { code: unknown }).code === 'string'
+          ? (err as { code: string }).code
+          : 'SOCKET_ERROR';
       const message = err instanceof Error ? err.message : 'Unexpected error';
-      emitError(socket, 'SOCKET_ERROR', message);
+      emitError(socket, code, message);
     });
   };
 }

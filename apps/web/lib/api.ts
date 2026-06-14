@@ -16,6 +16,13 @@ export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
+/** The in-memory access token, for transports that aren't fetch (e.g. the Socket.IO handshake). */
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
+export const API_BASE = BASE;
+
 export class ApiClientError extends Error {
   constructor(
     public readonly code: string,

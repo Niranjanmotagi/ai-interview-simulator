@@ -76,11 +76,27 @@ const config: Config = {
           '0%': { transform: 'translateX(-50%)' },
           '100%': { transform: 'translateX(0)' },
         },
+        // Slow, calm aurora drift for CodeSync's dark surface.
+        'aurora-1': {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '50%': { transform: 'translate(6%, -8%) scale(1.18)' },
+        },
+        'aurora-2': {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '50%': { transform: 'translate(-7%, 6%) scale(1.12)' },
+        },
+        'pulse-soft': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.45' },
+        },
       },
       animation: {
         marquee: 'marquee 40s linear infinite',
         'marquee-slow': 'marquee 70s linear infinite',
         'marquee-reverse': 'marquee-reverse 50s linear infinite',
+        'aurora-1': 'aurora-1 20s ease-in-out infinite',
+        'aurora-2': 'aurora-2 26s ease-in-out infinite',
+        'pulse-soft': 'pulse-soft 2.4s ease-in-out infinite',
       },
     },
   },
