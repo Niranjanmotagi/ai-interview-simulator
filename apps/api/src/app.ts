@@ -12,6 +12,7 @@ import { interviewRouter } from './modules/interviews/interview.routes';
 import { evaluationRouter } from './modules/evaluations/evaluation.routes';
 import { improvementRouter } from './modules/improvement/improvement.routes';
 import { analyticsRouter, dashboardRouter } from './modules/analytics/analytics.routes';
+import { roomRouter } from './modules/rooms/room.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -45,6 +46,7 @@ export function createApp(): Express {
   v1.use('/improvement-plans', improvementRouter);
   v1.use('/dashboard', dashboardRouter);
   v1.use('/analytics', analyticsRouter);
+  v1.use('/rooms', roomRouter);
   app.use('/api/v1', v1);
 
   app.use(notFoundHandler);

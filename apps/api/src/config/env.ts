@@ -29,6 +29,10 @@ const envSchema = z
 
     UPLOAD_DIR: z.string().default('./uploads'),
     MAX_UPLOAD_MB: z.coerce.number().positive().default(5),
+
+    // Realtime collaboration (CodeSync rooms)
+    REALTIME_PERSIST_DEBOUNCE_MS: z.coerce.number().int().positive().default(2000),
+    REALTIME_AUTOSNAPSHOT_MS: z.coerce.number().int().positive().default(120_000),
   })
   .refine((e) => e.AI_PROVIDER !== 'gemini' || Boolean(e.GEMINI_API_KEY), {
     message: 'GEMINI_API_KEY is required when AI_PROVIDER=gemini',

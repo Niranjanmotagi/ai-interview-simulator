@@ -316,3 +316,213 @@ export interface UpdateProfileInput {
   targetRoles?: string[];
   experienceLevel?: ExperienceLevel;
 }
+
+// ===========================================================================
+// CodeSync — collaborative coding interview rooms
+// ---------------------------------------------------------------------------
+// A "room" is a live coding-interview session. Roles are scoped to the room
+// (a global `user` can be the interviewer in one room and a candidate in
+// another), which is why room RBAC lives here and not on UserRole.
+// ===========================================================================
+
+export type RoomRole = 'interviewer' | 'candidate' | 'observer';
+export type RoomStatus = 'scheduled' | 'active' | 'ended';
+export type RoomLanguage = 'java' | 'python' | 'javascript' | 'cpp' | 'go';
+
+export const ROOM_LANGUAGES: RoomLanguage[] = ['java', 'python', 'javascript', 'cpp', 'go'];
+
+export interface RoomParticipantDto {
+  id: string;
+  userId: string;
+  name: string;
+  role: RoomRole;
+  color: string; // hex used for the live cursor / presence chip
+  online: boolean;
+  joinedAt: string;
+  lastSeenAt: string | null;
+}
+
+export interface RoomDto {
+  id: string;
+  title: string;
+  language: RoomLanguage;
+  status: RoomStatus;
+  hostId: string;
+  hostName: string;
+  inviteCode: string;
+  problemPrompt: string | null;
+  yourRole: RoomRole;
+  participantCount: number;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+}
+
+export interface RoomDetailDto extends RoomDto {
+  participants: RoomParticipantDto[];
+  snapshotCount: number;
+}
+
+export interface CreateRoomInput {
+  title: string;
+  language: RoomLanguage;
+  scheduledAt?: string | null;
+  problemPrompt?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+export type ChatMessageType = 'user' | 'system';
+
+export interface ChatMessageDto {
+  id: string;
+  roomId: string;
+  type: ChatMessageType;
+  userId: string | null; // null for system messages
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Recording — code snapshots ("git-commit"-style history) + activity monitoring
+// ---------------------------------------------------------------------------
+
+export type SnapshotReason = 'manual' | 'auto' | 'execution' | 'room_end';
+
+export interface CodeSnapshotListItemDto {
+  id: string;
+  label: string;
+  reason: SnapshotReason;
+  authorName: string;
+  language: RoomLanguage;
+  lineCount: number;
+  createdAt: string;
+}
+
+export interface CodeSnapshotDto extends CodeSnapshotListItemDto {
+  roomId: string;
+  code: string;
+}
+
+export type ActivityType =
+  | 'join'
+  | 'leave'
+  | 'paste'
+  | 'copy'
+  | 'cut'
+  | 'tab_hidden'
+  | 'tab_visible'
+  | 'window_blur'
+  | 'window_focus'
+  | 'run'
+  | 'language_change';
+
+export interface ActivityEventDto {
+  id: string;
+  roomId: string;
+  userId: string;
+  authorName: string;
+  type: ActivityType;
+  meta: Record<string, unknown> | null;
+  at: string;
+}
+
+export interface ActivitySummaryDto {
+  pasteCount: number;
+  copyCount: number;
+  tabHiddenCount: number;
+  windowBlurCount: number;
+  runCount: number;
+  focusScore: number; // 0–100; 100 = never left the tab/window
+}
+
+// ---------------------------------------------------------------------------
+// Realtime (Socket.IO) — wire payloads shared by server and client
+// ---------------------------------------------------------------------------
+
+export const SOCKET_EVENTS = {
+  ROOM_JOIN: 'room:join',
+  ROOM_STATE: 'room:state',
+  ROOM_ENDED: 'room:ended',
+  PRESENCE_LIST: 'presence:list',
+  PRESENCE_JOIN: 'presence:join',
+  PRESENCE_LEAVE: 'presence:leave',
+  DOC_UPDATE: 'doc:update',
+  AWARENESS_UPDATE: 'awareness:update',
+  TYPING: 'presence:typing',
+  CHAT_SEND: 'chat:send',
+  CHAT_MESSAGE: 'chat:message',
+  ACTIVITY: 'activity:event',
+  SNAPSHOT_CREATE: 'snapshot:create',
+  SNAPSHOT_CREATED: 'snapshot:created',
+  LANGUAGE_CHANGE: 'language:change',
+  LANGUAGE_CHANGED: 'language:changed',
+  ERROR: 'room:error',
+} as const;
+
+export type SocketEvent = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];
+
+export interface PresenceUser {
+  socketId: string;
+  userId: string;
+  name: string;
+  role: RoomRole;
+  color: string;
+}
+
+export interface RoomStateEvent {
+  room: RoomDto;
+  participants: RoomParticipantDto[];
+  presence: PresenceUser[];
+  docState: string | null; // base64-encoded Yjs document state for late joiners
+  language: RoomLanguage;
+  recentMessages: ChatMessageDto[];
+}
+
+export interface DocUpdateEvent {
+  update: string; // base64-encoded Yjs update
+  origin: string; // originating socketId
+}
+
+export interface EditorPosition {
+  lineNumber: number;
+  column: number;
+}
+
+export interface EditorSelection {
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
+}
+
+export interface AwarenessEvent {
+  socketId: string;
+  userId: string;
+  name: string;
+  color: string;
+  role: RoomRole;
+  cursor: EditorPosition | null;
+  selection: EditorSelection | null;
+}
+
+export interface TypingEvent {
+  socketId: string;
+  userId: string;
+  name: string;
+  isTyping: boolean;
+}
+
+export interface ActivityInput {
+  type: ActivityType;
+  meta?: Record<string, unknown> | null;
+}
+
+export interface SocketErrorEvent {
+  code: string;
+  message: string;
+}

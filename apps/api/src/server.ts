@@ -1,14 +1,19 @@
 import http from 'node:http';
-import { env } from './config/env';
+import { env, corsOrigins } from './config/env';
 import { logger } from './config/logger';
 import { connectDb, disconnectDb } from './config/db';
 import { createApp } from './app';
+import { attachRealtime } from './realtime/gateway';
+import { flushAll } from './realtime/roomRegistry';
 
 async function main(): Promise<void> {
   await connectDb();
 
   const app = createApp();
   const server = http.createServer(app);
+
+  // Socket.IO shares the HTTP server (and the JWT access token) with the REST API.
+  attachRealtime(server, corsOrigins);
 
   server.listen(env.PORT, () => {
     logger.info({ port: env.PORT, env: env.NODE_ENV }, 'API listening');
@@ -18,6 +23,7 @@ async function main(): Promise<void> {
   const shutdown = (signal: string) => {
     logger.info({ signal }, 'Shutting down');
     server.close(async () => {
+      await flushAll(); // persist any in-memory room docs before exit
       await disconnectDb();
       process.exit(0);
     });
