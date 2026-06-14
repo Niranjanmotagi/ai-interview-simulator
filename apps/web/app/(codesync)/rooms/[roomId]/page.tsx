@@ -28,8 +28,8 @@ export default function RoomPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-300" />
       </div>
     );
   }
@@ -56,12 +56,12 @@ export default function RoomPage() {
 
 function RoomMessage({ title, body }: { title: string; body: string }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center">
-      <h1 className="font-display text-xl font-semibold text-white/90">{title}</h1>
-      <p className="max-w-sm text-sm text-white/50">{body}</p>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-zinc-50 px-6 text-center">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-zinc-900">{title}</h1>
+      <p className="max-w-sm text-sm text-zinc-500">{body}</p>
       <Link
         href="/rooms"
-        className="mt-2 rounded-xl border border-white/15 px-4 py-2 text-sm text-white/80 transition-colors hover:bg-white/5"
+        className="mt-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
       >
         Back to rooms
       </Link>
@@ -78,7 +78,6 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
   const selfUserId = r.presence.find((p) => p.socketId === r.selfSocketId)?.userId ?? null;
   const isInterviewer = r.yourRole === 'interviewer';
 
-  // The interviewer seeds a starter template into an empty room once connected.
   useEffect(() => {
     if (seeded.current || r.status !== 'connected' || !isInterviewer) {
       return;
@@ -112,7 +111,7 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col">
+    <div className="flex h-[100dvh] flex-col bg-zinc-50">
       <RoomTopBar
         room={r.room}
         language={r.language}
@@ -125,8 +124,8 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
 
       <div className="flex min-h-0 flex-1">
         {/* Left rail — participants + (interviewer) monitor */}
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-white/[0.02] backdrop-blur-xl lg:flex">
-          <div className={isInterviewer ? 'h-1/2 min-h-0 border-b border-white/10' : 'flex-1 min-h-0'}>
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white lg:flex">
+          <div className={isInterviewer ? 'h-1/2 min-h-0 border-b border-zinc-200' : 'min-h-0 flex-1'}>
             <ParticipantsPanel presence={r.presence} typingUsers={r.typingUsers} selfSocketId={r.selfSocketId} />
           </div>
           {isInterviewer && (
@@ -136,9 +135,7 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
           )}
         </aside>
 
-        {/* Center — shared editor (top) + output console (bottom). The editor's
-            absolute inset gives Monaco a concrete box (height:100% doesn't
-            resolve reliably inside a flex child). */}
+        {/* Center — editor (dark) + output console */}
         <main className="flex min-w-0 flex-1 flex-col bg-[#0c0d11]">
           <div className="relative min-h-0 flex-1">
             <div className="absolute inset-0">
@@ -152,15 +149,6 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
                 onActivity={r.reportActivity}
               />
             </div>
-
-            {r.status === 'ended' && (
-              <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
-                <p className="text-lg font-medium text-white/90">This interview has ended.</p>
-                <Link href="/rooms" className="rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15">
-                  Back to rooms
-                </Link>
-              </div>
-            )}
           </div>
 
           <OutputConsole
@@ -173,7 +161,7 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
         </main>
 
         {/* Right rail — chat */}
-        <aside className="hidden w-80 shrink-0 border-l border-white/10 bg-white/[0.02] backdrop-blur-xl xl:block">
+        <aside className="hidden w-80 shrink-0 border-l border-zinc-200 bg-white xl:block">
           <ChatPanel
             messages={r.messages}
             typingUsers={r.typingUsers}
@@ -185,18 +173,18 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
       </div>
 
       {/* Mobile/tablet panel toggles */}
-      <div className="flex items-center justify-center gap-3 border-t border-white/10 bg-white/[0.03] p-2 backdrop-blur-xl xl:hidden">
+      <div className="flex items-center justify-center gap-3 border-t border-zinc-200 bg-white p-2 xl:hidden">
         <button
           type="button"
           onClick={() => setMobilePanel('people')}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-white/70 hover:bg-white/5"
+          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100"
         >
           <Users className="h-4 w-4" /> People ({r.presence.length})
         </button>
         <button
           type="button"
           onClick={() => setMobilePanel('chat')}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-white/70 hover:bg-white/5"
+          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100"
         >
           <MessageSquare className="h-4 w-4" /> Chat
         </button>
@@ -204,15 +192,15 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
 
       {mobilePanel && (
         <div className="fixed inset-0 z-50 xl:hidden" onClick={() => setMobilePanel(null)}>
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-zinc-900/30" />
           <div
-            className="absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col border-l border-white/10 bg-[#0d0f14]"
+            className="absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col border-l border-zinc-200 bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setMobilePanel(null)}
-              className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-white/50 hover:bg-white/10"
+              className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100"
               aria-label="Close panel"
             >
               <X className="h-4 w-4" />
@@ -220,14 +208,10 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
             {mobilePanel === 'people' ? (
               <div className="flex h-full flex-col">
                 <div className="min-h-0 flex-1">
-                  <ParticipantsPanel
-                    presence={r.presence}
-                    typingUsers={r.typingUsers}
-                    selfSocketId={r.selfSocketId}
-                  />
+                  <ParticipantsPanel presence={r.presence} typingUsers={r.typingUsers} selfSocketId={r.selfSocketId} />
                 </div>
                 {isInterviewer && (
-                  <div className="min-h-0 flex-1 border-t border-white/10">
+                  <div className="min-h-0 flex-1 border-t border-zinc-200">
                     <ActivityMonitor activity={r.activity} />
                   </div>
                 )}

@@ -49,13 +49,13 @@ export function ChatPanel({ messages, typingUsers, selfUserId, onSend, onTyping 
 
   return (
     <div className="flex h-full flex-col">
-      <h2 className="px-4 pb-3 pt-4 text-xs font-semibold uppercase tracking-wider text-white/50">Chat</h2>
+      <h2 className="px-4 pb-3 pt-4 text-xs font-semibold uppercase tracking-[0.15em] text-zinc-400">Chat</h2>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4">
         {messages.map((m) => {
           if (m.type === 'system') {
             return (
-              <p key={m.id} className="text-center text-xs text-white/30">
+              <p key={m.id} className="text-center text-xs text-zinc-400">
                 {m.text}
               </p>
             );
@@ -63,31 +63,29 @@ export function ChatPanel({ messages, typingUsers, selfUserId, onSend, onTyping 
           const mine = m.userId === selfUserId;
           return (
             <div key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
-              {!mine && <span className="mb-0.5 px-1 text-xs text-white/40">{m.authorName}</span>}
+              {!mine && <span className="mb-0.5 px-1 text-xs text-zinc-400">{m.authorName}</span>}
               <div
                 className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-snug ${
-                  mine
-                    ? 'rounded-br-sm bg-sky-500/90 text-[#06121e]'
-                    : 'rounded-bl-sm bg-white/[0.07] text-white/90'
+                  mine ? 'rounded-br-sm bg-indigo-600 text-white' : 'rounded-bl-sm bg-zinc-100 text-zinc-800'
                 }`}
               >
                 {m.text}
               </div>
-              <span className="mt-0.5 px-1 text-[10px] text-white/25">{timeLabel(m.createdAt)}</span>
+              <span className="mt-0.5 px-1 text-[10px] text-zinc-300">{timeLabel(m.createdAt)}</span>
             </div>
           );
         })}
         {messages.length === 0 && (
-          <p className="pt-8 text-center text-sm text-white/30">No messages yet. Say hello 👋</p>
+          <p className="pt-8 text-center text-sm text-zinc-400">No messages yet. Say hello 👋</p>
         )}
         {typingUsers.length > 0 && (
-          <p className="px-1 text-xs italic text-white/40">
+          <p className="px-1 text-xs italic text-zinc-400">
             {typingUsers.map((t) => t.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing…
           </p>
         )}
       </div>
 
-      <div className="border-t border-white/5 p-3">
+      <div className="border-t border-zinc-200 p-3">
         <div className="mb-2 flex gap-1">
           {QUICK_EMOJI.map((e) => (
             <button
@@ -113,13 +111,13 @@ export function ChatPanel({ messages, typingUsers, selfUserId, onSend, onTyping 
             }}
             rows={1}
             placeholder="Message…"
-            className="max-h-28 min-h-[40px] flex-1 resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-sky-500/50 focus:outline-none"
+            className="max-h-28 min-h-[40px] flex-1 resize-none rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
           <button
             type="button"
             onClick={submit}
             disabled={!draft.trim()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-[#06121e] transition-opacity hover:bg-sky-400 disabled:opacity-30"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition-colors hover:bg-indigo-500 disabled:opacity-30"
             aria-label="Send message"
           >
             <Send className="h-4 w-4" />
