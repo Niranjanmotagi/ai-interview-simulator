@@ -46,6 +46,18 @@
     background-size: 22px 22px;
   }
 
+  /* CodeSync "engineered" theme — faint blueprint grid on the dark canvas. */
+  .bg-blueprint {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .bg-grid-fade {
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
   /* Sticker pills: bordered, slightly rotated, candy-colored. */
   .sticker {
     @apply inline-flex items-center gap-1.5 rounded-full border-2 border-zinc-900 px-3.5 py-1.5 text-sm font-bold text-zinc-900 shadow-hard-sm;

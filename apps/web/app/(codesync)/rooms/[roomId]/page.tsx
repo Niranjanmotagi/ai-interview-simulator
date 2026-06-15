@@ -29,8 +29,8 @@ export default function RoomPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-300" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
       </div>
     );
   }
@@ -57,14 +57,14 @@ export default function RoomPage() {
 
 function RoomMessage({ title, body }: { title: string; body: string }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-zinc-50 px-6 text-center">
-      <h1 className="font-display text-xl font-semibold tracking-tight text-zinc-900">{title}</h1>
-      <p className="max-w-sm text-sm text-zinc-500">{body}</p>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#0a0a0b] px-6 text-center">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-white">{title}</h1>
+      <p className="max-w-sm text-sm text-zinc-400">{body}</p>
       <Link
         href="/rooms"
-        className="mt-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+        className="mt-2 rounded-md border border-white/15 px-4 py-2 font-mono text-xs uppercase tracking-wider text-zinc-300 transition-colors hover:border-lime-300/40 hover:text-white"
       >
-        Back to rooms
+        back to rooms
       </Link>
     </div>
   );
@@ -112,7 +112,7 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-zinc-50">
+    <div className="flex h-[100dvh] flex-col bg-[#0a0a0b]">
       <RoomTopBar
         room={r.room}
         language={r.language}
@@ -124,9 +124,8 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
       />
 
       <div className="flex min-h-0 flex-1">
-        {/* Left rail — participants + (interviewer) monitor */}
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white lg:flex">
-          <div className={isInterviewer ? 'h-1/2 min-h-0 border-b border-zinc-200' : 'min-h-0 flex-1'}>
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-[#0b0b0d] lg:flex">
+          <div className={isInterviewer ? 'h-1/2 min-h-0 border-b border-white/10' : 'min-h-0 flex-1'}>
             <ParticipantsPanel presence={r.presence} typingUsers={r.typingUsers} selfSocketId={r.selfSocketId} />
           </div>
           {isInterviewer && (
@@ -136,7 +135,6 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
           )}
         </aside>
 
-        {/* Center — editor (dark) + output console */}
         <main className="flex min-w-0 flex-1 flex-col bg-[#0c0d11]">
           <div className="relative min-h-0 flex-1">
             <div className="absolute inset-0">
@@ -161,8 +159,7 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
           />
         </main>
 
-        {/* Right rail — chat */}
-        <aside className="hidden w-80 shrink-0 border-l border-zinc-200 bg-white xl:block">
+        <aside className="hidden w-80 shrink-0 border-l border-white/10 bg-[#0b0b0d] xl:block">
           <ChatPanel
             messages={r.messages}
             typingUsers={r.typingUsers}
@@ -180,37 +177,20 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
         getCode={() => r.ydoc.getText('monaco').toString()}
       />
 
-      {/* Mobile/tablet panel toggles */}
-      <div className="flex items-center justify-center gap-3 border-t border-zinc-200 bg-white p-2 xl:hidden">
-        <button
-          type="button"
-          onClick={() => setMobilePanel('people')}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100"
-        >
-          <Users className="h-4 w-4" /> People ({r.presence.length})
+      <div className="flex items-center justify-center gap-3 border-t border-white/10 bg-[#0b0b0d] p-2 xl:hidden">
+        <button type="button" onClick={() => setMobilePanel('people')} className="flex items-center gap-2 rounded-md px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-zinc-400 hover:bg-white/5">
+          <Users className="h-4 w-4" /> people ({r.presence.length})
         </button>
-        <button
-          type="button"
-          onClick={() => setMobilePanel('chat')}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100"
-        >
-          <MessageSquare className="h-4 w-4" /> Chat
+        <button type="button" onClick={() => setMobilePanel('chat')} className="flex items-center gap-2 rounded-md px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-zinc-400 hover:bg-white/5">
+          <MessageSquare className="h-4 w-4" /> chat
         </button>
       </div>
 
       {mobilePanel && (
         <div className="fixed inset-0 z-50 xl:hidden" onClick={() => setMobilePanel(null)}>
-          <div className="absolute inset-0 bg-zinc-900/30" />
-          <div
-            className="absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col border-l border-zinc-200 bg-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setMobilePanel(null)}
-              className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100"
-              aria-label="Close panel"
-            >
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col border-l border-white/10 bg-[#0b0b0d]" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setMobilePanel(null)} className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-zinc-400 hover:bg-white/10" aria-label="Close panel">
               <X className="h-4 w-4" />
             </button>
             {mobilePanel === 'people' ? (
@@ -219,19 +199,13 @@ function RoomWorkspace({ roomId, roomCode }: { roomId: string; roomCode: string 
                   <ParticipantsPanel presence={r.presence} typingUsers={r.typingUsers} selfSocketId={r.selfSocketId} />
                 </div>
                 {isInterviewer && (
-                  <div className="min-h-0 flex-1 border-t border-zinc-200">
+                  <div className="min-h-0 flex-1 border-t border-white/10">
                     <ActivityMonitor activity={r.activity} />
                   </div>
                 )}
               </div>
             ) : (
-              <ChatPanel
-                messages={r.messages}
-                typingUsers={r.typingUsers}
-                selfUserId={selfUserId}
-                onSend={r.sendChat}
-                onTyping={r.sendTyping}
-              />
+              <ChatPanel messages={r.messages} typingUsers={r.typingUsers} selfUserId={selfUserId} onSend={r.sendChat} onTyping={r.sendTyping} />
             )}
           </div>
         </div>

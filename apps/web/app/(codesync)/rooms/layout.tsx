@@ -22,8 +22,8 @@ export default function RoomsLayout({ children }: { children: React.ReactNode })
 
   if (status !== 'authenticated') {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-300" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
       </div>
     );
   }

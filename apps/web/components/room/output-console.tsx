@@ -5,12 +5,12 @@ import { ChevronDown, ChevronUp, Loader2, Play, Terminal } from 'lucide-react';
 import type { ExecutionDto, ExecutionStatus } from '@ai-interview/types';
 
 const STATUS_META: Record<ExecutionStatus, { label: string; cls: string }> = {
-  running: { label: 'Running', cls: 'bg-amber-100 text-amber-700' },
-  success: { label: 'Success', cls: 'bg-emerald-100 text-emerald-700' },
-  compile_error: { label: 'Compile error', cls: 'bg-red-100 text-red-700' },
-  runtime_error: { label: 'Runtime error', cls: 'bg-red-100 text-red-700' },
-  timeout: { label: 'Timed out', cls: 'bg-amber-100 text-amber-700' },
-  error: { label: 'Engine error', cls: 'bg-red-100 text-red-700' },
+  running: { label: 'running', cls: 'bg-amber-400/15 text-amber-300' },
+  success: { label: 'success', cls: 'bg-lime-300/15 text-lime-300' },
+  compile_error: { label: 'compile error', cls: 'bg-red-400/15 text-red-300' },
+  runtime_error: { label: 'runtime error', cls: 'bg-red-400/15 text-red-300' },
+  timeout: { label: 'timed out', cls: 'bg-amber-400/15 text-amber-300' },
+  error: { label: 'engine error', cls: 'bg-red-400/15 text-red-300' },
 };
 
 interface Props {
@@ -29,9 +29,7 @@ export function OutputConsole({ execStatus, execRunner, lastExecution, canRun, o
   const lastSeen = useRef<string | null>(null);
 
   useEffect(() => {
-    if (running) {
-      setOpen(true);
-    }
+    if (running) setOpen(true);
   }, [running]);
   useEffect(() => {
     if (lastExecution && lastExecution.id !== lastSeen.current) {
@@ -41,43 +39,22 @@ export function OutputConsole({ execStatus, execRunner, lastExecution, canRun, o
   }, [lastExecution]);
 
   return (
-    <div className="shrink-0 border-t border-zinc-200 bg-white">
+    <div className="shrink-0 border-t border-white/10 bg-[#0a0a0b]">
       <div className="flex items-center gap-2 px-3 py-2">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
-        >
+        <button type="button" onClick={() => setOpen((o) => !o)} className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-zinc-200">
           <Terminal className="h-3.5 w-3.5" />
-          Console
+          console
           {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
         </button>
-
-        <span className="text-xs text-zinc-400">
-          {running
-            ? `Running${execRunner ? ` · ${execRunner}` : ''}…`
-            : lastExecution
-              ? STATUS_META[lastExecution.status].label
-              : 'Ready'}
+        <span className="font-mono text-[11px] text-zinc-600">
+          {running ? `running${execRunner ? ` · ${execRunner}` : ''}…` : lastExecution ? STATUS_META[lastExecution.status].label : 'ready'}
         </span>
 
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setShowStdin((v) => !v);
-              setOpen(true);
-            }}
-            className={`rounded-md px-2 py-1 text-xs transition-colors hover:bg-zinc-100 ${showStdin ? 'text-indigo-600' : 'text-zinc-500'}`}
-          >
+          <button type="button" onClick={() => { setShowStdin((v) => !v); setOpen(true); }} className={`rounded px-2 py-1 font-mono text-[11px] transition-colors hover:bg-white/5 ${showStdin ? 'text-lime-300' : 'text-zinc-500'}`}>
             stdin
           </button>
-          <button
-            type="button"
-            onClick={() => onRun(stdin.trim() ? stdin : undefined)}
-            disabled={!canRun || running}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-40"
-          >
+          <button type="button" onClick={() => onRun(stdin.trim() ? stdin : undefined)} disabled={!canRun || running} className="flex items-center gap-1.5 rounded-md bg-lime-300 px-3 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-lime-200 disabled:opacity-40">
             {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             Run
           </button>
@@ -85,25 +62,24 @@ export function OutputConsole({ execStatus, execRunner, lastExecution, canRun, o
       </div>
 
       {open && (
-        <div className="max-h-64 overflow-y-auto border-t border-zinc-100 bg-zinc-50 px-3 py-2.5">
+        <div className="max-h-64 overflow-y-auto border-t border-white/10 px-3 py-2.5">
           {showStdin && (
             <textarea
               value={stdin}
               onChange={(e) => setStdin(e.target.value)}
-              placeholder="Standard input (stdin) for this run…"
+              placeholder="stdin for this run…"
               rows={2}
-              className="mb-3 w-full resize-none rounded-lg border border-zinc-200 bg-white px-2.5 py-2 font-mono text-xs text-zinc-800 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none"
+              className="mb-3 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 font-mono text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-lime-300/40 focus:outline-none"
             />
           )}
-
           {running ? (
-            <div className="flex items-center gap-2 py-4 text-sm text-zinc-500">
-              <Loader2 className="h-4 w-4 animate-spin" /> Executing in a sandbox…
+            <div className="flex items-center gap-2 py-4 font-mono text-sm text-zinc-500">
+              <Loader2 className="h-4 w-4 animate-spin" /> executing in sandbox…
             </div>
           ) : lastExecution ? (
             <Result execution={lastExecution} />
           ) : (
-            <p className="py-4 text-sm text-zinc-400">Run your code to see the output here.</p>
+            <p className="py-4 font-mono text-sm text-zinc-600">run your code to see output here.</p>
           )}
         </div>
       )}
@@ -115,26 +91,16 @@ function Result({ execution }: { execution: ExecutionDto }) {
   const meta = STATUS_META[execution.status];
   return (
     <div>
-      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-        <span className={`rounded-full px-2 py-0.5 font-medium ${meta.cls}`}>{meta.label}</span>
-        {execution.exitCode != null && <span className="text-zinc-400">exit {execution.exitCode}</span>}
-        {execution.timeMs != null && <span className="text-zinc-400">{execution.timeMs} ms</span>}
-        {execution.memoryKb != null && (
-          <span className="text-zinc-400">{Math.round(execution.memoryKb / 1024)} MB</span>
-        )}
-        <span className="ml-auto text-zinc-400">by {execution.requestedByName}</span>
+      <div className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[11px]">
+        <span className={`rounded px-2 py-0.5 font-medium uppercase tracking-wider ${meta.cls}`}>{meta.label}</span>
+        {execution.exitCode != null && <span className="text-zinc-600">exit {execution.exitCode}</span>}
+        {execution.timeMs != null && <span className="text-zinc-600">{execution.timeMs}ms</span>}
+        {execution.memoryKb != null && <span className="text-zinc-600">{Math.round(execution.memoryKb / 1024)}MB</span>}
+        <span className="ml-auto text-zinc-600">by {execution.requestedByName}</span>
       </div>
-      {execution.stdout && (
-        <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-zinc-800">
-          {execution.stdout}
-        </pre>
-      )}
-      {execution.stderr && (
-        <pre className="mt-1 whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-red-600">
-          {execution.stderr}
-        </pre>
-      )}
-      {!execution.stdout && !execution.stderr && <p className="font-mono text-xs text-zinc-400">(no output)</p>}
+      {execution.stdout && <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-zinc-200">{execution.stdout}</pre>}
+      {execution.stderr && <pre className="mt-1 whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-red-300">{execution.stderr}</pre>}
+      {!execution.stdout && !execution.stderr && <p className="font-mono text-xs text-zinc-600">(no output)</p>}
     </div>
   );
 }
